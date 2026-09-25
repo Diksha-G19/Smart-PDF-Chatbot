@@ -1,7 +1,7 @@
 import streamlit as st
 
 from pdf_processor import extract_text_from_pdf, create_chunks
-from rag_pipeline import create_embeddings
+from rag_pipeline import create_vector_store, search_vector_store
 
 
 st.set_page_config(
@@ -14,8 +14,7 @@ st.set_page_config(
 st.title("Smart PDF Chatbot")
 
 st.write(
-    "Upload a PDF and convert its content into "
-    "searchable vector representations."
+    "Upload a PDF and ask questions about its content."
 )
 
 
@@ -31,9 +30,9 @@ if uploaded_file is not None:
         f"PDF uploaded successfully: {uploaded_file.name}"
     )
 
-    # -----------------------------
+    # -----------------------------------
     # STEP 1: Extract text
-    # -----------------------------
+    # -----------------------------------
 
     pages = extract_text_from_pdf(uploaded_file)
 
@@ -51,9 +50,9 @@ if uploaded_file is not None:
 
         st.success("Text extracted successfully!")
 
-        # -----------------------------
+        # -----------------------------------
         # STEP 2: Create chunks
-        # -----------------------------
+        # -----------------------------------
 
         chunks = create_chunks(pages)
 
@@ -63,47 +62,63 @@ if uploaded_file is not None:
             f"**Number of chunks:** {len(chunks)}"
         )
 
-        # -----------------------------
-        # STEP 3: Generate embeddings
-        # -----------------------------
+        # -----------------------------------
+        # STEP 3: Create FAISS vector store
+        # -----------------------------------
 
-        with st.spinner("Generating embeddings..."):
+        with st.spinner(
+            "Creating FAISS vector database..."
+        ):
 
-            vectors = create_embeddings(chunks)
+            vector_store = create_vector_store(chunks)
 
-        st.success("Embeddings generated successfully!")
-
-        st.subheader("Embeddings")
-
-        st.write(
-            f"**Number of embeddings:** {len(vectors)}"
+        st.success(
+            "FAISS vector database created successfully!"
         )
 
-        if vectors:
+        # -----------------------------------
+        # STEP 4: Ask question
+        # -----------------------------------
 
-            st.write(
-                f"**Embedding dimension:** {len(vectors[0])}"
-            )
+        st.subheader("Ask a Question")
 
-            st.write("**First embedding (first 10 values):**")
+        question = st.text_input(
+            "Enter your question:"
+        )
 
-            st.code(
-                str(vectors[0][:10])
-            )
+        if question:
 
-        # -----------------------------
-        # STEP 4: Show sample chunks
-        # -----------------------------
-
-        st.subheader("Sample Chunks")
-
-        for i, chunk in enumerate(chunks[:3], start=1):
-
-            with st.expander(
-                f"Chunk {i} — Page {chunk['page_number']}"
+            with st.spinner(
+                "Searching the document..."
             ):
 
-                st.write(chunk["text"])
+                results = search_vector_store(
+                    vector_store,
+                    question,
+                    k=3
+                )
+
+            st.subheader("Retrieved Information")
+
+            st.write(
+                f"Found {len(results)} relevant chunks."
+            )
+
+            for i, result in enumerate(
+                results,
+                start=1
+            ):
+
+                page_number = result.metadata.get(
+                    "page_number",
+                    "Unknown"
+                )
+
+                with st.expander(
+                    f"Result {i} — Page {page_number}"
+                ):
+
+                    st.write(result.page_content)
 
     else:
 
