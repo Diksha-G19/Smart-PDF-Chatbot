@@ -1,6 +1,7 @@
 import streamlit as st
 
 from pdf_processor import extract_text_from_pdf, create_chunks
+from rag_pipeline import create_embeddings
 
 
 st.set_page_config(
@@ -13,7 +14,8 @@ st.set_page_config(
 st.title("Smart PDF Chatbot")
 
 st.write(
-    "Upload a PDF document and process its content."
+    "Upload a PDF and convert its content into "
+    "searchable vector representations."
 )
 
 
@@ -29,7 +31,10 @@ if uploaded_file is not None:
         f"PDF uploaded successfully: {uploaded_file.name}"
     )
 
-    # Step 1: Extract text
+    # -----------------------------
+    # STEP 1: Extract text
+    # -----------------------------
+
     pages = extract_text_from_pdf(uploaded_file)
 
     st.subheader("PDF Information")
@@ -46,17 +51,53 @@ if uploaded_file is not None:
 
         st.success("Text extracted successfully!")
 
-        # Step 2: Create chunks
+        # -----------------------------
+        # STEP 2: Create chunks
+        # -----------------------------
+
         chunks = create_chunks(pages)
 
         st.subheader("Text Chunking")
 
         st.write(
-            f"**Number of chunks created:** {len(chunks)}"
+            f"**Number of chunks:** {len(chunks)}"
         )
 
-        # Display first few chunks
-        for i, chunk in enumerate(chunks[:5], start=1):
+        # -----------------------------
+        # STEP 3: Generate embeddings
+        # -----------------------------
+
+        with st.spinner("Generating embeddings..."):
+
+            vectors = create_embeddings(chunks)
+
+        st.success("Embeddings generated successfully!")
+
+        st.subheader("Embeddings")
+
+        st.write(
+            f"**Number of embeddings:** {len(vectors)}"
+        )
+
+        if vectors:
+
+            st.write(
+                f"**Embedding dimension:** {len(vectors[0])}"
+            )
+
+            st.write("**First embedding (first 10 values):**")
+
+            st.code(
+                str(vectors[0][:10])
+            )
+
+        # -----------------------------
+        # STEP 4: Show sample chunks
+        # -----------------------------
+
+        st.subheader("Sample Chunks")
+
+        for i, chunk in enumerate(chunks[:3], start=1):
 
             with st.expander(
                 f"Chunk {i} — Page {chunk['page_number']}"
