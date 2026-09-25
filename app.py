@@ -1,9 +1,8 @@
 import streamlit as st
 
-from pdf_processor import extract_text_from_pdf
+from pdf_processor import extract_text_from_pdf, create_chunks
 
 
-# Page configuration
 st.set_page_config(
     page_title="Smart PDF Chatbot",
     page_icon="📚",
@@ -11,15 +10,13 @@ st.set_page_config(
 )
 
 
-# Title
 st.title("Smart PDF Chatbot")
 
 st.write(
-    "Upload a PDF document and extract its text for processing."
+    "Upload a PDF document and process its content."
 )
 
 
-# PDF uploader
 uploaded_file = st.file_uploader(
     "Upload your PDF",
     type=["pdf"]
@@ -28,40 +25,47 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    st.success(f"PDF uploaded successfully: {uploaded_file.name}")
+    st.success(
+        f"PDF uploaded successfully: {uploaded_file.name}"
+    )
 
-    # Extract text
+    # Step 1: Extract text
     pages = extract_text_from_pdf(uploaded_file)
 
-    # Basic information
     st.subheader("PDF Information")
 
-    st.write(f"**File name:** {uploaded_file.name}")
-    st.write(f"**Number of pages:** {len(pages)}")
+    st.write(
+        f"**File name:** {uploaded_file.name}"
+    )
 
-    # Check whether text was extracted
+    st.write(
+        f"**Number of pages:** {len(pages)}"
+    )
+
     if pages:
 
         st.success("Text extracted successfully!")
 
-        # Display first page
-        st.subheader("Extracted Text")
+        # Step 2: Create chunks
+        chunks = create_chunks(pages)
 
-        first_page = pages[0]
+        st.subheader("Text Chunking")
 
         st.write(
-            f"**Page {first_page['page_number']}**"
+            f"**Number of chunks created:** {len(chunks)}"
         )
 
-        st.text_area(
-            "Extracted content:",
-            first_page["text"],
-            height=300
-        )
+        # Display first few chunks
+        for i, chunk in enumerate(chunks[:5], start=1):
+
+            with st.expander(
+                f"Chunk {i} — Page {chunk['page_number']}"
+            ):
+
+                st.write(chunk["text"])
 
     else:
 
         st.warning(
-            "No text could be extracted from this PDF. "
-            "The PDF may contain scanned images instead of selectable text."
+            "No text could be extracted from this PDF."
         )
