@@ -12,6 +12,27 @@ from rag_pipeline import (
     generate_answer
 )
 
+def clean_answer(response):
+    # Handle LangChain AIMessage responses
+    if hasattr(response, "content"):
+        response = response.content
+
+    # Extract text from a list of response blocks
+    if isinstance(response, list):
+        text_parts = []
+
+        for item in response:
+            if isinstance(item, dict) and "text" in item:
+                text_parts.append(item["text"])
+
+        return "\n".join(text_parts)
+
+    # Handle a dictionary response
+    if isinstance(response, dict):
+        return response.get("text", "")
+
+    return str(response)
+
 
 # --------------------------------------------------
 # PAGE CONFIGURATION
@@ -28,7 +49,7 @@ st.set_page_config(
 # TITLE
 # --------------------------------------------------
 
-st.title("📚 Smart PDF Chatbot")
+st.title("Smart PDF Chatbot")
 
 st.write(
     "A step-by-step demonstration of "
@@ -42,7 +63,7 @@ st.divider()
 # STEP 1 — PDF UPLOAD
 # --------------------------------------------------
 
-st.header("1️⃣ PDF Input")
+st.header("1. PDF Input")
 
 uploaded_file = st.file_uploader(
     "Upload a PDF document",
@@ -65,7 +86,7 @@ if uploaded_file is not None:
     # STEP 2 — TEXT EXTRACTION
     # --------------------------------------------------
 
-    st.header("2️⃣ Text Extraction")
+    st.header("2. Text Extraction")
 
     with st.spinner("Extracting text from PDF..."):
 
@@ -126,7 +147,7 @@ if uploaded_file is not None:
     # STEP 3 — TEXT CHUNKING
     # --------------------------------------------------
 
-    st.header("3️⃣ Text Chunking")
+    st.header("3. Text Chunking")
 
     chunks = create_chunks(pages)
 
@@ -150,7 +171,7 @@ if uploaded_file is not None:
         st.write("Overlap: 200")
 
 
-    with st.expander("🧩 View Sample Chunks"):
+    with st.expander("View Sample Chunks"):
 
         for i, chunk in enumerate(
             chunks[:3],
@@ -173,7 +194,7 @@ if uploaded_file is not None:
     # STEP 4 — EMBEDDINGS
     # --------------------------------------------------
 
-    st.header("4️⃣ Text Embeddings")
+    st.header("4. Text Embeddings")
 
     embedding_model = get_embedding_model()
 
@@ -206,7 +227,7 @@ if uploaded_file is not None:
         )
 
 
-    with st.expander("🧠 View Sample Embedding"):
+    with st.expander("View Sample Embedding"):
 
         st.write(
             "First 10 values of the first chunk's vector:"
@@ -226,7 +247,7 @@ if uploaded_file is not None:
     # STEP 5 — FAISS
     # --------------------------------------------------
 
-    st.header("5️⃣ FAISS Vector Store")
+    st.header("5. FAISS Vector Store")
 
     with st.spinner(
         "Creating FAISS vector database..."
@@ -253,7 +274,7 @@ if uploaded_file is not None:
         st.write("**Search type:** Semantic similarity")
 
 
-    with st.expander("ℹ️ What is happening here?"):
+    with st.expander("What is happening here?"):
 
         st.write(
             "The embeddings are stored in FAISS so that "
@@ -270,7 +291,7 @@ if uploaded_file is not None:
     # STEP 6 — USER QUESTION
     # --------------------------------------------------
 
-    st.header("6️⃣ Ask a Question")
+    st.header("6. Ask a Question")
 
     question = st.text_input(
         "Enter a question about your PDF:",
@@ -284,7 +305,7 @@ if uploaded_file is not None:
         # STEP 7 — QUESTION EMBEDDING
         # --------------------------------------------------
 
-        st.header("7️⃣ Question Embedding")
+        st.header("7. Question Embedding")
 
         with st.spinner(
             "Converting question into an embedding..."
@@ -307,7 +328,7 @@ if uploaded_file is not None:
             f"{len(question_vector)}"
         )
 
-        with st.expander("🔢 View Question Vector"):
+        with st.expander("View Question Vector"):
 
             st.code(
                 str(question_vector[:10])
@@ -318,7 +339,7 @@ if uploaded_file is not None:
         # STEP 8 — SEMANTIC RETRIEVAL
         # --------------------------------------------------
 
-        st.header("8️⃣ Semantic Retrieval")
+        st.header("8. Semantic Retrieval")
 
         with st.spinner(
             "Searching FAISS for relevant chunks..."
@@ -363,7 +384,7 @@ if uploaded_file is not None:
         # STEP 9 — GEMINI GENERATION
         # --------------------------------------------------
 
-        st.header("9️⃣ Gemini LLM Generation")
+        st.header("9. Gemini LLM Generation")
 
         st.write(
             "The retrieved document chunks are provided "
@@ -371,7 +392,7 @@ if uploaded_file is not None:
         )
 
         # Show the context sent to Gemini
-        with st.expander("📚 View Context Sent to Gemini"):
+        with st.expander("View Context Sent to Gemini"):
 
             for i, result in enumerate(
                 results,
@@ -412,20 +433,18 @@ if uploaded_file is not None:
         # STEP 10 — FINAL ANSWER
         # --------------------------------------------------
 
-        st.header("🔟 Final Answer")
-
-        st.markdown(
-            f"### 🤖 Answer"
-        )
-
-        st.write(answer)
+        st.subheader("10. Final Answer")
+        
+        formatted_answer = clean_answer(answer)
+        
+        st.markdown(formatted_answer)
 
 
         # --------------------------------------------------
         # SOURCES
         # --------------------------------------------------
 
-        st.subheader("📚 Sources")
+        st.subheader("Sources")
 
         source_pages = []
 

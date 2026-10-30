@@ -142,5 +142,12 @@ ANSWER:
 """
 
     response = llm.invoke(prompt)
+    answer = response.content
+    if isinstance(answer, list):
+        answer = "\n".join(
+            block["text"]
+            for block in answer
+            if isinstance(block, dict) and "text" in block
+       )
 
-    return response.content
+    return answer
