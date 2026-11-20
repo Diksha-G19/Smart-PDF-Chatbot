@@ -13,9 +13,8 @@ from langchain_community.vectorstores import FAISS
 load_dotenv()
 
 
-# --------------------------------------------------
+
 # GEMINI EMBEDDINGS
-# --------------------------------------------------
 
 def get_embedding_model():
 

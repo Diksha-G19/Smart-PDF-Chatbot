@@ -29,3 +29,10 @@ faiss_index/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Screenshots
+screenshots/
+
+# Project presentation files
+Smart_PDF_Chatbot_Presentation.pdf
+Smart_PDF_Chatbot_Presentation.pptx
