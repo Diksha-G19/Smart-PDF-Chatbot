@@ -1,4 +1,4 @@
-# Smart PDF Chatbot
+# Smart PDF Chatbot [RAG based]
 
 A Retrieval-Augmented Generation (RAG) application that lets users
 upload PDF documents and ask questions about their content. The
