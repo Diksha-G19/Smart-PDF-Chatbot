@@ -7,6 +7,9 @@ chunks, converts the chunks into embeddings, stores them in a FAISS
 vector store, retrieves relevant passages for a question, and uses
 Google Gemini to generate a grounded answer.
 
+## Live Demo
+**Try the application here:** [Smart PDF Chatbot](https://smart-pdf-chatbot-genai.streamlit.app/)
+
 ## Features
 
 -   Upload and process PDF documents.
