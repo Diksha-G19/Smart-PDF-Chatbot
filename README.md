@@ -65,7 +65,6 @@ Smart-PDF-Chatbot/
 ├── app.py                 # Streamlit application and user interface
 ├── pdf_processor.py       # PDF text extraction and processing
 ├── rag_pipeline.py        # Chunking, retrieval, and answer generation
-├── embedding_test.py      # Embedding model test script
 ├── requirements.txt       # Python dependencies
 ├── .env                   # API key configuration (do not commit)
 ├── .gitignore             # Files excluded from Git
